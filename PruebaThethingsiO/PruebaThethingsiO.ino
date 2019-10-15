@@ -20,7 +20,7 @@ void startEthernet() {
 }
 
 int sensorValue = 0;
-int value = 0;
+int segons = 0;
 String key = "A0";
 
 void setup() {
@@ -33,15 +33,18 @@ void loop() {
   Ethernet.maintain();
   // put your main code here, to run repeatedly:
   sensorValue = analogRead(A0);
-  if (sensorValue != 0){
-    value++;
-    thing.addValue(key,value);
+  while (sensorValue != 0){
+    segons++;
+    delay(1000);
+  }
+  if(segons != 0){
+    thing.addValue(key,segons);
     thing.send();
     Serial.print("Key: ");
     Serial.print(key);
     Serial.print(", ");
-    Serial.print("Value: ");
-    Serial.println(value);
-    delay(1000);
+    Serial.print("Segons: ");
+    Serial.println(segons);
+    segons = 0;
   }
 }
