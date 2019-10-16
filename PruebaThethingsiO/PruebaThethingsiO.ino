@@ -11,16 +11,16 @@ void startEthernet() {
     Serial.println("Connecting Arduino to network...");
 
     // Local Network Settings
-    byte mac[] = { 0xE0, 0xDB, 0x55, 0xA1, 0x46, 0x41 }; // Must be unique on local network
+    byte mac[] = { 0xD4, 0x28, 0xB2, 0xFF, 0xA0, 0xA1 }; // Must be unique on local network
 
     // Connect to network amd obtain an IP address using DHCP
-    while (Ethernet.begin(mac) == 0)
+    //while (Ethernet.begin(mac) == 0)
         Serial.println("DHCP Failed, retrying");
     Serial.println("Arduino connected to network using DHCP");
 }
 
 int sensorValue = 0;
-int segons = 0;
+int seconds = 0;
 String key = "A0";
 
 void setup() {
@@ -32,19 +32,20 @@ void setup() {
 void loop() {
   Ethernet.maintain();
   // put your main code here, to run repeatedly:
-  sensorValue = analogRead(A0);
-  while (sensorValue != 0){
-    segons++;
+  while (analogRead(A0) != 0){
+    Serial.println("Pulsado");
+    seconds++;
     delay(1000);
   }
-  if(segons != 0){
-    thing.addValue(key,segons);
+  if(seconds != 0){
+    Serial.println("Se ha dejado de pulsar");
+    thing.addValue(key,seconds);
     thing.send();
     Serial.print("Key: ");
     Serial.print(key);
     Serial.print(", ");
-    Serial.print("Segons: ");
-    Serial.println(segons);
-    segons = 0;
+    Serial.print("seconds: ");
+    Serial.println(seconds);
+    seconds = 0;
   }
 }
