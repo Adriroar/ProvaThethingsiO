@@ -7,6 +7,10 @@
 
 thethingsiOEthernet thing(TOKEN);
 
+int sensorValue = 0;
+int seconds = 0;
+String key = "A0";
+
 void startEthernet() {
     Serial.println("Connecting Arduino to network...");
 
@@ -14,14 +18,10 @@ void startEthernet() {
     byte mac[] = { 0xD4, 0x28, 0xB2, 0xFF, 0xA0, 0xA1 }; // Must be unique on local network
 
     // Connect to network amd obtain an IP address using DHCP
-    //while (Ethernet.begin(mac) == 0)
+    while (Ethernet.begin(mac) == 0)
         Serial.println("DHCP Failed, retrying");
     Serial.println("Arduino connected to network using DHCP");
 }
-
-int sensorValue = 0;
-int seconds = 0;
-String key = "A0";
 
 void setup() {
   // put your setup code here, to run once:
