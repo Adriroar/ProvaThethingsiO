@@ -1,36 +1,73 @@
-#include <SPI.h>
-#include <Ethernet.h>
-#include <thethingsiO.h>
-#include <thethingsiOEthernet.h>
+#include <YunClient.h>
+#include <Bridge.h>
+#include <PubSubClient.h>
+#include <Process.h>
 
 #define TOKEN "lURZi1TESc4McQbr6pizAI60t-GfSyPIa-JuEiLsy1Y"
 
-thethingsiOEthernet thing(TOKEN);
+YunClient wificlient;
 
-int sensorValue = 0;
+String topic = "v2/things/" + String(TOKEN);
+String message = "";
+boolean firstValue = true;
+
+
+void addValue(String key, int value) {
+  if (firstValue == true) {
+    firstValue = false;
+    message.concat("{\"key\":\"" + key + "\",\"value\":\"" + value+"\"}");
+  }
+  else {
+    message.concat(",{\"key\":\"" + key + "\",\"value\":\"" + value+"\"}");
+  }
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+    // handle message arrived
+    String text = "";
+    for (int i = 0; i < length; i++)
+        text.concat((char)payload[i]);
+    text.replace(" ", "");
+    Serial.println(text);
+}
+
+PubSubClient mqtt("mqtt.thethings.io", 1883, callback, wificlient);
+
+void publish() {
+  String toSend = "{\"values\":[" + message + "]}";
+  mqtt.publish((char*)topic.c_str(), (char*)toSend.c_str());
+  message= "";
+  firstValue = true;
+  Serial.println("Published");
+}
+
 int seconds = 0;
 String key = "A0";
-
-void startEthernet() {
-    Serial.println("Connecting Arduino to network...");
-
-    // Local Network Settings
-    byte mac[] = { 0xD4, 0x28, 0xB2, 0xFF, 0xA0, 0xA1 }; // Must be unique on local network
-
-    // Connect to network amd obtain an IP address using DHCP
-    while (Ethernet.begin(mac) == 0)
-        Serial.println("DHCP Failed, retrying");
-    Serial.println("Arduino connected to network using DHCP");
-}
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  startEthernet();
+  while(!Serial);
+  Bridge.begin();
+  while (!mqtt.connect("Yunclient"))
+    Serial.println("Could not subscribe, retrying...");
+  
+  Serial.println("Client connected to mqtt broker!");
+  mqtt.subscribe((char*)topic.c_str());
 }
 
 void loop() {
-  Ethernet.maintain();
+  /*Process wifiCheck;
+  wifiCheck.runShellCommand("/usr/bin/pretty-wifi-info.lua");
+  while (wifiCheck.available() > 0) {
+    char c = wifiCheck.read();
+    Serial.print(c);
+  }
+
+  Serial.println();
+
+  delay(000);*/
+  
   // put your main code here, to run repeatedly:
   while (analogRead(A0) != 0){
     Serial.println("Pulsado");
@@ -39,13 +76,14 @@ void loop() {
   }
   if(seconds != 0){
     Serial.println("Se ha dejado de pulsar");
-    thing.addValue(key,seconds);
-    thing.send();
-    Serial.print("Key: ");
+    addValue(key,seconds);
+    publish();
+    /*Serial.print("Key: ");
     Serial.print(key);
     Serial.print(", ");
     Serial.print("seconds: ");
-    Serial.println(seconds);
+    Serial.println(seconds);*/
     seconds = 0;
   }
+  mqtt.loop();
 }
