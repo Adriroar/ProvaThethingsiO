@@ -22,6 +22,16 @@ void addValue(String key, int value) {
   }
 }
 
+void addValueString(String key, int value) {
+  if (firstValue == true) {
+    firstValue = false;
+    message.concat("{\"key\":\"" + key + "\",\"value\":\"" + value+"\"}");
+  }
+  else {
+    message.concat(",{\"key\":\"" + key + "\",\"value\":\"" + value+"\"}");
+  }
+}
+
 void callback(char* topic, byte* payload, unsigned int length) {
     // handle message arrived
     String text = "";
@@ -43,6 +53,8 @@ void publish() {
 
 int seconds = 0;
 String key = "A0";
+boolean pressed = false;
+boolean pressed_prev = false;
 
 void setup() {
   // put your setup code here, to run once:
@@ -70,20 +82,21 @@ void loop() {
   
   // put your main code here, to run repeatedly:
   while (analogRead(A0) != 0){
-    Serial.println("Pulsado");
+    pressed = true;
     seconds++;
+    if (pressed != pressed_prev) {
+      Serial.println("The button is pressed");
+      pressed_prev = pressed;
+    }
     delay(1000);
   }
   if(seconds != 0){
-    Serial.println("Se ha dejado de pulsar");
+    Serial.println("The button isn't pressed");
     addValue(key,seconds);
     publish();
-    /*Serial.print("Key: ");
-    Serial.print(key);
-    Serial.print(", ");
-    Serial.print("seconds: ");
-    Serial.println(seconds);*/
+    pressed = false;
     seconds = 0;
+    pressed_prev = pressed;
   }
   mqtt.loop();
 }
